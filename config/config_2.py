@@ -2,7 +2,14 @@ class Parameter:
     # ------------------
     # data parameters
     # ------------------
-    data_path = 'data/RBC_exp_2e9_7_t_51.txt'
+    data_path = 'data/RBC_dns_1E10_7_t_42.txt'
+    pmode = True
+    Ra = 1e10
+    Pr = 7.0
+    
+    # ------------------
+    # initialization
+    # ------------------
     load_initial = False 
     initial_path = ''
     initial_weight = 0
@@ -11,16 +18,11 @@ class Parameter:
     # PINN parameters
     # ------------------
     N_layer = 8
-    N_neuron = 128
+    N_neuron = 256
     batch_size = 4096
-    epochs = 20000
-    learning_rate = 1e-3
-    
-    # ---------------------
-    # physics parameters
-    # ---------------------
-    Ra = 2e9
-    Pr = 7.0
+    epochs = 500
+    learning_rate, min_lr = 1e-3, 1e-5
+    reduction_epochs, reduction_factor = 60, 0.5
     
     # ----------
     # weights
@@ -29,4 +31,4 @@ class Parameter:
     lambda_T_bound = 1e-3
     lambda_conti = 1e-3
     lambda_NSE = 0.1
-    lambda_EE = 1e-2
+    lambda_EE = 5e-3
