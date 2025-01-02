@@ -36,7 +36,7 @@ LPINN requires Python 3.10 installed with pip. It was developed and tested on Py
 
 1) set up the config file, e.g. config_1.py
 
-2) prepare dataset (instructions follow in a make_data.py soon), but until now test dataset available.
+2) prepare dataset as a .txt or npz file with rows: t x y z u v w T p from measurment or DNS data and store it in data/
 
 3) run in a terminal with active venv: python ./code/main.py config/config_1.py 
 
