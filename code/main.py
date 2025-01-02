@@ -31,6 +31,11 @@ tf.random.set_seed(3), np.random.seed(2), random.seed(2204)
 tf.keras.utils.get_custom_objects().clear()
 
 def main(): 
+    # memory growth
+    physical_devices = tf.config.list_physical_devices('GPU')
+    for gpu in physical_devices:
+        tf.config.experimental.set_memory_growth(gpu, True)
+    
     # ---------------------------------------
     # initialize parameters from config.py
     # ---------------------------------------
@@ -54,14 +59,20 @@ def main():
     # -----------------------------------
     # load data
     # -----------------------------------
-    data = np.loadtxt(params.data_path,skiprows=1)
-    data_input, data_output = data[:,0:4], data[:,4:9]
-    # preprocessing
-    [data_input, data_output] = DataProcessor([data_input, data_output]).process()
+    if params.data_path[-3:] == 'txt':
+        data = np.loadtxt(params.data_path,skiprows=1)
+        data_input, data_output = np.asarray(data[:,0:4],dtype=np.float32), np.asarray(data[:,4:9],dtype=np.float32)
+    if params.data_path[-3:] == 'npz':
+        data_input, data_output = np.asarray(np.load(params.data_path)['inputs'],dtype=np.float32), np.asarray(np.load(params.data_path)['y_true'],dtype=np.float32)
+    # correct time sampling
+    if np.min(data_input[:,0]) != 0:
+        data_input[:,0] = data_input[:,0] - np.min(data_input[:,0])
+    
     print('Input shape: ', data_input.shape)
     print('Output shape: ', data_output.shape)
-    # random train/test split: Use 5% for validation
-    inputs, inputs_val, y_true, y_true_val = train_test_split(data_input, data_output, test_size = 0.05)
+    print('Time array: ', np.unique(data_input[:,0])) 
+    # random train/test split of 3 times the batch size
+    inputs, inputs_val, y_true, y_true_val = train_test_split(data_input, data_output, test_size = (3*params.batch_size)/len(data_input[:,0]))
     
     # -------------------
     # build PINN model
@@ -86,11 +97,9 @@ def main():
     # -------------------
     # checkpoint for saving weights after each epoch
     save_weights = tf.keras.callbacks.ModelCheckpoint(params.output_path+'/weights/weights_epoch_{epoch:04d}.weights.h5', save_weights_only=True, save_freq='epoch')
-    # reduce learning rate when loss has stopped improving
-    reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='loss', factor=0.5, patience=200, min_lr=1e-5, min_delta=5e-6)
     # custom logging
-    custom_log = CustomLoggingCallback(test_data=[inputs_val,y_true_val], model=pinn, N_epochs=(initial_epoch+params.epochs), log_dir=params.output_path+'/logs')
+    custom_log = CustomLoggingCallback(test_data=[inputs_val,y_true_val], model=pinn, N_epochs=(initial_epoch+params.epochs), log_dir=params.output_path+'/logs', param=params)
     # train PINN model
-    pinn.fit(x=inputs, y=y_true, batch_size=params.batch_size, epochs=initial_epoch+params.epochs, initial_epoch=initial_epoch, validation_data=(inputs_val, y_true_val), verbose=0, callbacks=[custom_log, save_weights, reduce_lr])
+    pinn.fit(x=inputs, y=y_true, batch_size=params.batch_size, epochs=initial_epoch+params.epochs, initial_epoch=initial_epoch, validation_data=(inputs_val, y_true_val), verbose=0, callbacks=[custom_log, save_weights])
 if __name__ == "__main__":
     main()
