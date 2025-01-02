@@ -34,7 +34,8 @@ LPINN requires Python 3.10 installed with pip. It was developed and tested on Py
   
 ## How to use LPINN?
 
-1) prepare dataset as a .txt or npz file with rows: t x y z u v w T p from measurment or DNS data and store it in data/ 
+1) prepare dataset as a .txt or npz file with rows: t x y z u v w T p from measurment or DNS data and store it in data/     
+    OR contact us and we send you a test file
 
 2) set up the config file, e.g. config_1.py
 
